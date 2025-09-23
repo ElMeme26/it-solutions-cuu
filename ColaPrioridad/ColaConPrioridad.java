@@ -2,9 +2,9 @@ package ColaPrioridad;
 
 import java.util.Optional;
 
-public class ColaConPrioridad<V> {
-    private Nodo<V> inicio;
-    private Nodo<V> fin;
+public class ColaConPrioridad {
+    private Nodo<Tarea> inicio;
+    private Nodo<Tarea> fin;
     private int numElementos;
 
     public ColaConPrioridad() {
@@ -13,48 +13,61 @@ public class ColaConPrioridad<V> {
         this.numElementos = 0;
     }
 
-    public void push(V item, int prioridad) {
-        Nodo<V> nodo = new Nodo<>(item, prioridad, null);
+    public void push(Tarea tarea) {
+        Nodo<Tarea> nuevoNodo = new Nodo<>(tarea, tarea.getPrioridad(), null);
 
         if (inicio == null) {
-            inicio = nodo;
-            fin = nodo;
+            inicio = nuevoNodo;
+            fin = nuevoNodo;
         } else {
             // Buscamos su lugar
-            Nodo<V> aux = inicio;
+            Nodo<Tarea> aux = inicio;
+            Nodo<Tarea> penultimo = null;
 
-            // Miramos si tenemos que insertar al principio
-            if (aux.getPrioridad() < prioridad) {
-                inicio = nodo;
-                inicio.setNext(aux);
+            // Mientras el nodo actual sea más importante que el nuevo, sigue avanzando
+            while (aux != null &&
+                    (aux.getItem().getPrioridad() < tarea.getPrioridad() ||
+                        (aux.getItem().getPrioridad() == tarea.getPrioridad() &&
+                            !aux.getItem().getFechaEntrega().isAfter(tarea.getFechaEntrega())))) {
+                penultimo = aux;
+                aux = aux.getNext();
+                
+            }
+
+            if (penultimo == null) {
+                nuevoNodo.setNext(inicio);
+                inicio = nuevoNodo;
             } else {
-                Nodo<V> penultimoElemento = null;
-
-                while (aux != null && aux.getPrioridad() >= prioridad) {
-                    penultimoElemento = aux;
-                    aux = aux.getNext();
+                penultimo.setNext(nuevoNodo);
+                nuevoNodo.setNext(aux);
+                if (aux == null) {
+                    fin = nuevoNodo;
                 }
-
-                // Aqui ya tenemos donde tenemos que insertar
-                penultimoElemento.setNext(nodo);
-                nodo.setNext(aux);
             }
         }
 
         this.numElementos++;
     }
 
-    public Optional<V> pop() {
-        Optional<V> item = Optional.empty();
+    public Optional<Tarea> pop() {
 
-        if (this.numElementos > 0) {
-            item = Optional.of(inicio.getItem());
-            this.numElementos--;
-
-            inicio = inicio.getNext();
+        // No hay nada que sacar
+        if (inicio == null) {
+            if (numElementos > 0) {
+                numElementos = 0;
+            }
+            return Optional.empty();
         }
 
-        return item;
+        Nodo<Tarea> nodoEliminado = inicio;
+        inicio = inicio.getNext();
+        numElementos--;
+
+        if (inicio == null) {
+            fin = null;
+        }
+
+        return Optional.of(nodoEliminado.getItem());
     }
 
     public boolean hasNext() {
@@ -71,15 +84,25 @@ public class ColaConPrioridad<V> {
         return this.numElementos;
     }
 
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        Nodo<V> aux = inicio;
+    public boolean isEmpty() {
+        return this.numElementos == 0;
+    }
 
-        while (aux != null) {
-            sb.append(aux.getItem() + ", Prioridad: " + aux.getPrioridad() + "\n");
-            aux = aux.getNext();
+    public String toString() {
+
+        if (numElementos == 0) {
+            return "La cola está vacía.";
         }
 
+        StringBuilder sb = new StringBuilder();
+        sb.append("*** Tareas Pendientes ***\n");
+        Nodo<Tarea> aux = inicio;
+
+        while (aux != null) {
+            sb.append(aux.getItem().toString()).append("\n");
+            aux = aux.getNext();
+        }
+        sb.append("===================");
         return sb.toString();
     }
 }
