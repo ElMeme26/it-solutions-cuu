@@ -1,322 +1,182 @@
 package ArbolBinario;
 
-import java.util.ArrayList;
+import java.util.Stack;
  
 public class ArbolBinario {
  
-    Nodo<Integer> raiz = null;
-    private int numeroElementos = 0;
-    private int numeroBusquedas = 0;
-    private int numeroIteracionesTotal = 0;
-    private int numeroIteracionesUltimaBusqueda = 0;
+    private NodoArbol raiz;
  
     public ArbolBinario() {
- 
+        this.raiz = null;
     }
  
-    public void insertarElemento(Integer value) {
-        Nodo<Integer> nuevoNodo = new Nodo<Integer>(value, null, null);
- 
+    public void insertar(Empleado empleado) {
+        NodoArbol nuevoNodo = new NodoArbol(empleado);
+        
+        // Si el árbol está vacío
         if (raiz == null) {
             raiz = nuevoNodo;
-            System.out.println("Inserto la raiz");
-        } else {
-            // Necesitamos encontrar en que posición debemos insertar el nodo
-            Nodo<Integer> aux = raiz;
- 
-            while (aux != null) {
-                // Comprobamos si tenemos que insertarlo ya
-                // Comprobamos si nodo hoja
-                if (aux.getDer() == null && aux.getIzq() == null) {
-                    if (value > aux.getValue()) {
-                        // Derecha
-                        System.out.println(value + " Lo insertamos a la derecha de: " + aux.getValue());
-                        aux.setDer(nuevoNodo);
-                        aux = null;
-                    } else {
-                        // Izquierda
-                        System.out.println(value + " Lo insertamos a la izquierda de: " + aux.getValue());
-                        aux.setIzq(nuevoNodo);
-                        aux = null;
-                    }
-                } else if (value > aux.getValue() && aux.getDer() == null) {
-                    // Lo insertamos a la derecha
-                    System.out.println(value + " Lo insertamos a la derecha de: " + aux.getValue());
-                    aux.setDer(nuevoNodo);
-                    aux = null;
-                } else if (value < aux.getValue() && aux.getIzq() == null) {
-                    // Lo insertamos a la izquierda
-                    System.out.println(value + " Lo insertamos a la izquierda de: " + aux.getValue());
-                    aux.setIzq(nuevoNodo);
-                    aux = null;
-                } else {
-                    // Pasamos de nodo
-                    if (value > aux.getValue()) {
-                        aux = aux.getDer();
-                    } else {
-                        aux = aux.getIzq();
-                    }
-                }
- 
-            }
- 
+            return;
         }
- 
-        // Incrementamos el número de elementos en 1
-        numeroElementos++;
- 
-    }
- 
-    private void insertarNodo(Nodo<Integer> nodo) {
-        if (raiz == null) {
-            raiz = nodo;
-            System.out.println("Inserto la raiz");
-        } else {
-            // Necesitamos encontrar en que posición debemos insertar el nodo
-            Nodo<Integer> aux = raiz;
- 
-            while (aux != null) {
-                // Comprobamos si tenemos que insertarlo ya
-                // Comprobamos si nodo hoja
-                if (aux.getDer() == null && aux.getIzq() == null) {
-                    if (nodo.getValue() > aux.getValue()) {
-                        // Derecha
-                        System.out.println(nodo.getValue() + " Lo insertamos a la derecha de: " + aux.getValue());
-                        aux.setDer(nodo);
-                        aux = null;
-                    } else {
-                        // Izquierda
-                        System.out.println(nodo.getValue() + " Lo insertamos a la izquierda de: " + aux.getValue());
-                        aux.setIzq(nodo);
-                        aux = null;
-                    }
-                } else if (nodo.getValue() > aux.getValue() && aux.getDer() == null) {
-                    // Lo insertamos a la derecha
-                    System.out.println(nodo.getValue() + " Lo insertamos a la derecha de: " + aux.getValue());
-                    aux.setDer(nodo);
-                    aux = null;
-                } else if (nodo.getValue() < aux.getValue() && aux.getIzq() == null) {
-                    // Lo insertamos a la izquierda
-                    System.out.println(nodo.getValue() + " Lo insertamos a la izquierda de: " + aux.getValue());
-                    aux.setIzq(nodo);
-                    aux = null;
-                } else {
-                    // Pasamos de nodo
-                    if (nodo.getValue() > aux.getValue()) {
-                        aux = aux.getDer();
-                    } else {
-                        aux = aux.getIzq();
-                    }
-                }
- 
-            }
-        }
-    }
- 
-    public Integer buscarElemento(Integer value) {
-        Nodo<Integer> aux = raiz;
-        Nodo<Integer> resultado = null;
-        numeroIteracionesUltimaBusqueda = 0;
- 
+        // Si el árbol no está vacío
+        NodoArbol aux = raiz;
+        NodoArbol padre = null;
+
         while (aux != null) {
-            // Comprobamos si es el valor
-            if (aux.getValue() == value) {
-                // Hemos encontrado el elemento
-                resultado = aux;
-                aux = null;
-            } else if (aux.getDer() == null && aux.getIzq() == null) {
-                // Si hemos llegado a un nodo hoja el elemento no está en el ABB
-                // El elemento no está
-                aux = null;
-            } else if (value > aux.getValue() && aux.getDer() != null) {
-                // Si el valor es mayor y tenemos nodo a la derecha, vamos a la derecha
+            padre = aux;
+
+            if (empleado.getId() < aux.getEmpleado().getId()) {
+                aux = aux.getIzq();
+            } else if (empleado.getId() > aux.getEmpleado().getId()) {
                 aux = aux.getDer();
-            } else if (value < aux.getValue() && aux.getIzq() != null) {
-                // Si el valor es menos y tenemos nodo a la izquierda, vamos a la izquierda
+            } else {
+                // Si existe el ID no se hace nada
+                System.out.println("ID duplicado, no se insertó el empleado");
+                return;
+            }
+        }
+
+        // Si se encuentra donde insertarlo
+        if (empleado.getId() < padre.getEmpleado().getId()) {
+            padre.setIzq(nuevoNodo);
+        } else {
+            padre.setDer(nuevoNodo);
+        }
+    }    
+ 
+    public Empleado buscar(int id) {
+        NodoArbol aux = raiz;
+        
+        while (aux != null) {
+            // Si se encuentra el empleado
+            if (id == aux.getEmpleado().getId()) {
+                return aux.getEmpleado();
+            }
+
+            // Si no se encuentra, se decide si bajamos al nodo izquirdo o derecho
+            if (id < aux.getEmpleado().getId()) {
                 aux = aux.getIzq();
             } else {
-                // Si el nodo es mayor y no tenemos nodo a la derecha o es menor y no tenemos
-                // nodo a la izquierda
-                // El elemento no está
-                aux = null;
+                aux = aux.getDer();
             }
- 
-            numeroIteracionesUltimaBusqueda++;
         }
- 
-        numeroIteracionesTotal += numeroIteracionesUltimaBusqueda;
-        numeroBusquedas++;
- 
-        if (resultado != null) {
-            return resultado.getValue();
-        }else {
-            return null;
-        }
+        // Si no se encuentra nada
+        return null;
     }
  
-    public boolean eliminarElemento(Integer value) {
-        boolean resultado = false;
-        Nodo<Integer> aux = raiz;
+    public void eliminar(int id) {
+        NodoArbol aux = raiz;
+        NodoArbol padre = null;
+        boolean esHijoIzq = false;
  
-        while (aux != null) {
-            // Si es la raiz
-            if (aux.getValue() == value) {
-                Nodo<Integer> nodoAEliminar = aux;
- 
-                if (aux.getDer() != null) {
-                    raiz = aux.getDer();
-                    if (nodoAEliminar.getIzq() != null) {
-                        insertarNodo(nodoAEliminar.getIzq());
-                        nodoAEliminar.setIzq(null);
-                        nodoAEliminar.setDer(null);
-                    }
-                }else if (aux.getIzq() != null) {
-                    raiz = aux.getIzq();
-                    if (nodoAEliminar.getDer() != null) {
-                        insertarNodo(nodoAEliminar.getDer());
-                        nodoAEliminar.setIzq(null);
-                        nodoAEliminar.setDer(null);
-                    }
-                }else {
-                    raiz = null;
-                }
-                 
-                resultado = true;
-                aux = null;
-            } else if (aux.getIzq() != null && aux.getIzq().getValue() == value) {
-                Nodo<Integer> nodoAEliminar = aux.getIzq();
-                // Si el valor está a la izquierda del nodo que estamos recorriendo
-                // Miramos si tenemos izquierda en el nodo a eliminar
- 
-                if (aux.getIzq().getIzq() != null) {
-                    // Tenemos Nodo a la izquierda
-                    // Apuntamos el nodo que estamos recorriendo al siguiente del nodo a eliminar
-                    aux.setIzq(aux.getIzq().getIzq());
-                    // Reposicionamos sus hijos
-                    if (nodoAEliminar.getDer() != null) {
-                        insertarNodo(nodoAEliminar.getDer());
-                    }
-                    nodoAEliminar.setDer(null);
-                    nodoAEliminar.setIzq(null);
-                    resultado = true;
-                    aux = null;
-                } else {
-                    // No tenemos nodo a la izquierda del elemento a eliminar
-                    // Miramos si es nodo hoja
- 
-                    if (aux.getIzq() == null && aux.getDer() == null) {
-                        aux.setIzq(null);
-                    } else {
-                        aux.setIzq(null);
-                        if (nodoAEliminar.getDer() != null) {
-                            insertarNodo(nodoAEliminar.getDer());
-                        }
-                    }
-                     
-                    resultado = true;
-                    aux = null;
-                }
- 
-            } else if (aux.getDer() != null && aux.getDer().getValue() == value) {
-                Nodo<Integer> nodoAEliminar = aux.getDer();
-                // Si el valor está a la derecha del nodo que estamos recorriendo
-                // Miramos si tenemos derecha en el nodo a eliminar
- 
-                if (aux.getDer().getDer() != null) {
-                    // Tenemos Nodo a la izquierda
-                    // Apuntamos el nodo que estamos recorriendo al siguiente del nodo a eliminar
-                    aux.setDer(aux.getDer().getDer());
-                    // Reposicionamos sus hijos
-                    if (nodoAEliminar.getIzq() != null) {
-                        insertarNodo(nodoAEliminar.getIzq());
-                    }
-                    nodoAEliminar.setDer(null);
-                    nodoAEliminar.setIzq(null);
-                    resultado = true;
-                    aux = null;
-                } else {
-                    // No tenemos nodo a la izquierda del elemento a eliminar
-                    // Miramos si es nodo hoja
- 
-                    if (aux.getIzq().getIzq() == null && aux.getDer().getDer() == null) {
-                        aux.setDer(null);
-                    } else {
-                        aux.setDer(null);
-                        if (nodoAEliminar.getIzq() != null) {
-                            insertarNodo(nodoAEliminar.getIzq());
-                        }
- 
-                    }
-                     
-                    resultado = true;
-                    aux = null;
-                }
+        // Encontrar nodo a eliminar
+        while (aux != null && aux.getEmpleado().getId() != id) {
+            padre = aux;
+
+            if (id < aux.getEmpleado().getId()) {
+                aux = aux.getIzq();
+                esHijoIzq = true;
             } else {
-                if (value > aux.getValue()) {
-                    aux = aux.getDer();
-                } else {
-                    aux = aux.getIzq();
-                }
+                aux = aux.getDer();
+                esHijoIzq = false;
             }
         }
-         
-        //En caso de borrar el nodo disminuimos la cantidad de nodos en 1
-        if (resultado) {
-            numeroElementos--;
+
+        // Si el nodo no se encuentra, pasamos
+        if (aux == null) {
+            System.err.println("No se encontró el empleado con ID " + id + " para eliminar.");
+            return;
         }
- 
-        return resultado;
- 
-    }
- 
-    public int size() {
-        return this.numeroElementos;
-    }
- 
-    public int getNumeroIteracionesMedioEnBusquedas() {
-        return (int) Math.ceil(numeroIteracionesTotal / (double) this.numeroBusquedas);
-    }
- 
-    public int getNumeroIteracionesUltimaBusqueda() {
-        return this.numeroIteracionesUltimaBusqueda;
-    }
- 
-    public ArrayList<Integer> obtenerElementosOrdenadosAscendentemente() {
-        ArrayList<Integer> elementosOrdenados = new ArrayList<>();
-        recorrerAscendente(raiz, elementosOrdenados);
-        return elementosOrdenados;
-    }
- 
-    public ArrayList<Integer> obtenerElementosOrdenadosDescendentemente() {
-        ArrayList<Integer> elementosOrdenados = new ArrayList<>();
-        recorrerDescendente(raiz, elementosOrdenados);
-        return elementosOrdenados;
-    }
- 
-    private void recorrerAscendente(Nodo<Integer> nodo, ArrayList<Integer> elementos) {
-        if (nodo != null) {
-            if (nodo.getIzq() == null && nodo.getDer() == null) {
-                elementos.add(nodo.getValue());
+
+        // Si el nodo a eliminar es un nodo hoja
+        if (aux.getIzq() == null && aux.getDer() == null) {
+            if (aux == raiz) {
+                raiz = null;
+            } else if (esHijoIzq) {
+                padre.setIzq(null);
             } else {
-                recorrerAscendente(nodo.getIzq(), elementos);
-                elementos.add(nodo.getValue());
-                recorrerAscendente(nodo.getDer(), elementos);
+                padre.setDer(null);
             }
-        }
- 
-    }
- 
-    private void recorrerDescendente(Nodo<Integer> nodo, ArrayList<Integer> elementos) {
-        if (nodo != null) {
-            if (nodo.getIzq() == null && nodo.getDer() == null) {
-                elementos.add(nodo.getValue());
+        
+        // Si el nodo a eliminar tiene un solo hijo
+        } else if (aux.getDer() == null) {
+            if (aux == raiz) {
+                raiz = aux.getIzq();
+            } else if (esHijoIzq) {
+                padre.setIzq(aux.getIzq());
             } else {
-                recorrerDescendente(nodo.getDer(), elementos);
-                elementos.add(nodo.getValue());
-                recorrerDescendente(nodo.getIzq(), elementos);
+                padre.setDer(aux.getIzq());
             }
+
+        // Si no tiene hijo izquierdo
+        } else if (aux.getIzq() == null) {
+            if (aux == raiz) {
+                raiz = aux.getDer();
+            } else if (esHijoIzq) {
+                padre.setIzq(aux.getDer());
+            } else {
+                padre.setDer(aux.getDer());
+            }
+
+        // Si el nodo a eliminar tiene 2 hijos
+        } else {
+            NodoArbol sucesor = encontrarSucesor(aux);
+
+            aux.setEmpleado(sucesor.getEmpleado());
+
+            eliminarSucesor(aux, sucesor);
         }
- 
     }
+
+    private NodoArbol encontrarSucesor(NodoArbol nodoConDosHijos) {
+        NodoArbol aux = nodoConDosHijos.getDer();
+
+        while (aux.getIzq() != null) {
+            aux = aux.getIzq();
+        }
+        return aux;
+    }
+
+    private void eliminarSucesor(NodoArbol nodoPadreDelSucesor, NodoArbol sucesor) {
+        NodoArbol aux = nodoPadreDelSucesor.getDer();
+
+        if (aux == sucesor) {
+            nodoPadreDelSucesor.setDer(sucesor.getDer());
+            return;
+        }
+
+        while (aux.getIzq() != sucesor) {
+            aux = aux.getIzq();
+        }
+
+        aux.setIzq(sucesor.getDer());
+    }
+
+    public void mostrar() {
+        if (raiz == null) {
+            System.out.println("No hay empleados en el sistema.");
+            return;
+        }
+
+        System.out.println("=== Listado de Empleados ===");
+        Stack<NodoArbol> stack = new Stack<>();
+        NodoArbol aux = raiz;
+
+        while (aux != null || !stack.isEmpty()) {
+            
+            while (aux != null) {
+                stack.push(aux);
+                aux = aux.getIzq();
+            }
+
+            aux = stack.pop();
+
+            System.out.println(aux.getEmpleado().toString());
+            
+            aux = aux.getDer();
+        }
+        System.out.println("===========================================");
+    }
+ 
  
 }
