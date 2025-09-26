@@ -4,12 +4,15 @@ import java.time.LocalDate;
 
 public class Tarea {
  
+    private static int contadorId = 0;
+    private final int id;
     private String descripcion;
     private int prioridad;
     private LocalDate fechaEntrega;
     private int horasEstimadas;
  
     public Tarea(String descripcion, int prioridad, LocalDate fechaEntrega, int horasEstimadas) {
+        this.id = ++contadorId;
         this.descripcion = descripcion;
         this.prioridad = prioridad;
         this.fechaEntrega = fechaEntrega;
@@ -47,10 +50,14 @@ public class Tarea {
     public void setHorasEstimadas(int horasEstimadas) {
         this.horasEstimadas = horasEstimadas;
     }
+
+    public int getId() {
+        return id;
+    }
  
     @Override
     public String toString() {
-        return "Tarea: '" + descripcion + '\'' +
+        return "Tarea ID-'" + id + ": " + descripcion + '\'' +
                " (Prioridad: " + prioridad +
                ", Fecha Límite: " + fechaEntrega + 
                ", Horas: " + horasEstimadas + ')';
