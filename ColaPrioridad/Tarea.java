@@ -7,11 +7,13 @@ public class Tarea {
     private String descripcion;
     private int prioridad;
     private LocalDate fechaEntrega;
+    private int horasEstimadas;
  
-    public Tarea(String descripcion, int prioridad, LocalDate fechaEntrega) {
+    public Tarea(String descripcion, int prioridad, LocalDate fechaEntrega, int horasEstimadas) {
         this.descripcion = descripcion;
         this.prioridad = prioridad;
         this.fechaEntrega = fechaEntrega;
+        this.horasEstimadas = horasEstimadas;
     }
  
     public String getDescripcion() {
@@ -37,11 +39,20 @@ public class Tarea {
     public void setFechaEntrega(LocalDate fechaEntrega) {
         this.fechaEntrega = fechaEntrega;
     }
+
+    public int getHorasEstimadas() {
+        return horasEstimadas;
+    }
+
+    public void setHorasEstimadas(int horasEstimadas) {
+        this.horasEstimadas = horasEstimadas;
+    }
  
     @Override
     public String toString() {
         return "Tarea: '" + descripcion + '\'' +
                " (Prioridad: " + prioridad +
-               ", Fecha Límite: " + fechaEntrega + ')';
+               ", Fecha Límite: " + fechaEntrega + 
+               ", Horas: " + horasEstimadas + ')';
     }
 }
