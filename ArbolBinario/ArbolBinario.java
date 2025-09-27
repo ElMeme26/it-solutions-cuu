@@ -152,13 +152,12 @@ public class ArbolBinario {
         aux.setIzq(sucesor.getDer());
     }
 
-    public void mostrar() {
+    public String mostrar() {
         if (raiz == null) {
-            System.out.println("No hay empleados en el sistema.");
-            return;
+            return "No hay empleados en el sistema.";
         }
 
-        System.out.println("=== Listado de Empleados ===");
+        StringBuilder sb = new StringBuilder("=== Listado de Empleados ===");
         Stack<NodoArbol> stack = new Stack<>();
         NodoArbol aux = raiz;
 
@@ -171,11 +170,11 @@ public class ArbolBinario {
 
             aux = stack.pop();
 
-            System.out.println(aux.getEmpleado().toString());
+            sb.append(aux.getEmpleado().toString()).append("\n");
             
             aux = aux.getDer();
         }
-        System.out.println("===========================================");
+        return sb.toString();
     }
  
  

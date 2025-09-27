@@ -1,6 +1,9 @@
 package HashMap;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+
 import ArbolBinario.Empleado;
 import ColaPrioridad.Tarea;
 
@@ -41,6 +44,10 @@ public class Registros {
 
     public void eliminarTarea(int id) {
         registroTareas.remove(id);
+    }
+
+    public List<Tarea> obtenerTodasLasTareas() {
+        return new ArrayList<>(registroTareas.values());
     }
 
     public void mostrarEmpleados() {

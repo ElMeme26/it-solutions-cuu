@@ -76,12 +76,12 @@ public class LinkedList {
         }
     }
 
-    public void findByDepartment(String department) {
+    public String findByDepartment(String department) {
         if (isEmpty()) {
-            System.out.println(RED + "\nNo hay tareas pendientes" + RESET);
-            return;
+            return "No hay tareas pendientes";
         }
 
+        StringBuilder sb = new StringBuilder("--- Tareas del Depto: " + department + " ---\n\n");
         NodeLL iteratorNode = head;
         boolean found = false;
 
@@ -95,8 +95,10 @@ public class LinkedList {
         }
         
         if (!found) {
-            System.out.println(RED + "\nNo se encontraron tareas para el departamento: " + department + RESET);
+            return "No se encontraron tareas para el departamento: " + department;
         }
+
+        return sb.toString();
     }
 
     public void show() {
