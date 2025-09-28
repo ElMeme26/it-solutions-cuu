@@ -1,21 +1,25 @@
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
-import java.awt.Dimension;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import Algoritmos.Algoritmos;
 import ArbolBinario.ArbolBinario;
 import ArbolBinario.Empleado;
 import ColaPrioridad.ColaConPrioridad;
 import ColaPrioridad.Tarea;
+import DivideYVenceras.Asignacion;
+import DivideYVenceras.DistribuidorTareas;
+import DivideYVenceras.Proyecto;
 import Grafos.Grafos;
 import HashMap.Registros;
 import LinkedList.LinkedList;
 import LinkedList.Queue;
 import LinkedList.Stack;
+import Recursividad.CalcStats;
 
 
 public class Main {
@@ -26,6 +30,7 @@ public class Main {
     private static final Stack pilaIncidentesCriticos = new Stack();
     private static final Queue colaTareasSimples = new Queue();
     private static final LinkedList listaTareasDepartamento = new LinkedList();
+    private static final Algoritmos algoritmos = new Algoritmos();
     
     public static void main(String[] args) {
         datosBase(); 
@@ -54,8 +59,10 @@ public class Main {
     private static void menuDirectorGeneral() {
         String menu = "Panel de Dirección General\n\n" +
                       "1. Módulo de RH\n" +
-                      "2. Crear Tarea Priorizada\n" +
-                      "3. Volver";
+                      "2. Crear Tarea Prioritaria\n" +
+                      "3. Ver Reporte de Tareas\n" +
+                      "4. Planificación estratégica\n" +
+                      "5. Volver";
         while (true) {
             String opcionStr = JOptionPane.showInputDialog(null, menu, "Bienvenido, Director/a", JOptionPane.PLAIN_MESSAGE);
             if(opcionStr == null) break;
@@ -64,7 +71,9 @@ public class Main {
                 switch(opcion){
                     case 1: menuRH(); break;
                     case 2: crearTareaPriorizada(); break;
-                    case 3: return;
+                    case 3: generarReporteTareas(); break;
+                    case 4: planificacionEstrategica(); break;
+                    case 5: return;
                     default: mostrarError("Opción no válida.");
                 }
             } catch (NumberFormatException e) { mostrarError("Por favor, ingrese un número válido."); }
@@ -101,8 +110,8 @@ public class Main {
 
     private static void menuLiderDeProyecto() {
         String menu = "Panel de Líder de Proyecto\n\n" +
-                "1. Crear Tarea Priorizada\n" +
-                "2. Planificar Dependencias (Grafos)\n" +
+                "1. Crear Tarea Prioritaria\n" +
+                "2. Planificar Dependencias\n" +
                 "3. Consultar Empleados\n" +
                 "4. Volver";
         while (true) {
@@ -113,7 +122,7 @@ public class Main {
                 switch (opcion) {
                     case 1: crearTareaPriorizada(); break;
                     case 2: planificarProyectoConDependencias(); break;
-                    case 3: 
+                    case 3:
                         String listadoEmpleados = arbolEmpleados.mostrar();
                         mostrador("Empleados Disponibles", listadoEmpleados);
                         break;
@@ -125,11 +134,55 @@ public class Main {
     }
     
     private static void menuAnalista() {
-        JOptionPane.showMessageDialog(null, "");
+        String menu = "Panel de Análisis de Datos\n\n" +
+                "1. Generar Reporte de Tareas\n" +
+                "2. Calcular Carga de Trabajo\n" +
+                "3. Búsqueda Rápida de Tarea por ID\n" +
+                "4. Volver";
+        while (true) {
+            String opcionStr = JOptionPane.showInputDialog(null, menu, "Business Intelligence", JOptionPane.PLAIN_MESSAGE);
+            if (opcionStr == null) break;
+            try {
+                int opcion = Integer.parseInt(opcionStr);
+                switch (opcion) {
+                    case 1: generarReporteTareas(); break;
+                    case 2: calcularCargaTrabajo(); break;
+                    case 3: busquedaRapidaTarea(); break;
+                    case 4: return;
+                    default: mostrarError("Opción no válida.");
+                }
+            } catch (NumberFormatException e) { mostrarError("Por favor, ingrese un número válido."); }
+        }
     }
 
     private static void menuDesarrollador() {
-        JOptionPane.showMessageDialog(null, "");
+        String menu = "Portal del Desarrollador\n\n" +
+                "1. Agregar Tarea Simple\n" +
+                "2. Ver Próxima Tarea Programada\n" +
+                "3. Consultar Tareas de mi Departamento\n" +
+                "4. Volver";
+        while (true) {
+            String opcionStr = JOptionPane.showInputDialog(null, menu, "Mis Tareas", JOptionPane.PLAIN_MESSAGE);
+            if (opcionStr == null) break;
+            try {
+                int opcion = Integer.parseInt(opcionStr);
+                switch (opcion) {
+                    case 1: agregarTarea(); break;
+                    case 2:
+                        JOptionPane.showMessageDialog(null, "Próxima tarea simple programada:\n" + colaTareasSimples.peek());
+                        break;
+                    case 3:
+                        String depto = solicitarTexto("Ingrese su departamento:");
+                        if (depto != null && !depto.trim().isEmpty()) {
+                             String tareasDepto = listaTareasDepartamento.findByDepartment(depto);
+                             mostrador("Tareas del Departamento", tareasDepto);
+                        }
+                        break;
+                    case 4: return;
+                    default: mostrarError("Opción no válida.");
+                }
+            } catch (NumberFormatException e) { mostrarError("Por favor, ingrese un número válido."); }
+        }
     }
 
     // Funciones RH
@@ -295,6 +348,119 @@ public class Main {
         }
     }
 
+    private static void planificacionEstrategica() {
+        try {
+            Proyecto p = new Proyecto("Lanzamiento Nuevo Software v2.0");
+            List<Tarea> tareasProyecto = registrosGlobales.obtenerTodasLasTareas();
+            if (tareasProyecto.isEmpty()) {
+                mostrarError("No hay tareas para crear un proyecto.");
+                return;
+            }
+            tareasProyecto.forEach(p::agregarTarea);
+            List<Empleado> empleadosDisponibles = new ArrayList<>();
+            empleadosDisponibles.add(registrosGlobales.buscarEmpleado(1));
+            empleadosDisponibles.add(registrosGlobales.buscarEmpleado(2));
+            empleadosDisponibles.add(registrosGlobales.buscarEmpleado(3));
+            empleadosDisponibles.add(registrosGlobales.buscarEmpleado(4));
+
+            DistribuidorTareas distribuidor = new DistribuidorTareas();
+            List<Asignacion> asignaciones = distribuidor.distribuir(p, empleadosDisponibles);
+            StringBuilder resultado = new StringBuilder("Distribución del Proyecto '" + p.getNombre() + "':\n\n");
+            for(Asignacion a : asignaciones) {
+                resultado.append(">> Empleado: ").append(a.getEmpleado().getNombre()).append("\n");
+                a.getTareasAsignadas().forEach(t -> resultado.append("   - ").append(t.getDescripcion()).append("\n"));
+                resultado.append("\n");
+            }
+            mostrador("Plan de Distribución", resultado.toString());
+        } catch (Exception e) {
+            mostrarError("Error al planificar. Verifique que existan tareas y empleados suficientes.");
+        }
+    }
+
+    private static void generarReporteTareas() {
+        String[] criterios = {"Por Prioridad", "Por Fecha de Entrega", "Por ID"};
+        int sel = JOptionPane.showOptionDialog(null, "Ordenar reporte por:", "Generar Reporte",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, criterios, criterios[0]);
+        if (sel == -1) return;
+        List<Tarea> lista = registrosGlobales.obtenerTodasLasTareas();
+        if (lista.isEmpty()) {
+            mostrarError("No hay tareas para generar un reporte.");
+            return;
+        }
+        Comparator<Tarea> comp = null;
+        switch (sel) {
+            case 0: comp = Comparator.comparingInt(Tarea::getPrioridad).thenComparing(Tarea::getFechaEntrega); break;
+            case 1: comp = Comparator.comparing(Tarea::getFechaEntrega); break;
+            case 2: comp = Comparator.comparingInt(Tarea::getId); break;
+        }
+        if (comp != null) {
+            List<Tarea> tareasOrdenadas = algoritmos.bubbleSort(lista, comp);
+            StringBuilder reporte = new StringBuilder("--- Reporte de Tareas ---\n\n");
+            tareasOrdenadas.forEach(t -> reporte.append(t.toString()).append("\n"));
+            mostrador("Reporte Generado", reporte.toString());
+        }
+    }
+
+    private static void agregarTarea() {
+        String[] tipos = {"Incidente Crítico", "Tarea Simple", "Tarea Departamental"};
+        int seleccion = JOptionPane.showOptionDialog(null, "Seleccione el tipo de tarea a agregar:",
+                "Agregar Tarea ", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, tipos, tipos[0]);
+
+        if (seleccion == -1) return;
+
+        switch (seleccion) {
+            case 0:
+                String incidente = solicitarTexto("Descripción del incidente crítico:");
+                if (incidente != null && !incidente.trim().isEmpty()) {
+                    pilaIncidentesCriticos.push(incidente);
+                    JOptionPane.showMessageDialog(null, "Incidente agregado a la Pila.");
+                }
+                break;
+            case 1:
+                String tareaSimple = solicitarTexto("Descripción de la tarea programada:");
+                if (tareaSimple != null && !tareaSimple.trim().isEmpty()) {
+                    colaTareasSimples.enqueue(tareaSimple);
+                    JOptionPane.showMessageDialog(null, "Tarea agregada a la Cola.");
+                }
+                break;
+            case 2:
+                String depto = solicitarTexto("Departamento:");
+                String tareaDepto = solicitarTexto("Descripción de la tarea:");
+                if (depto != null && !depto.trim().isEmpty() && tareaDepto != null && !tareaDepto.trim().isEmpty()) {
+                    listaTareasDepartamento.insertFirst(depto.trim() + ": " + tareaDepto.trim());
+                    JOptionPane.showMessageDialog(null, "Tarea departamental agregada a la Lista.");
+                }
+                break;
+        }
+    }
+
+    private static void calcularCargaTrabajo() {
+        List<Tarea> todas = registrosGlobales.obtenerTodasLasTareas();
+        if (todas.isEmpty()) {
+            mostrarError("No hay tareas para calcular.");
+            return;
+        }
+        CalcStats calc = new CalcStats();
+        int totalHoras = calc.calcularTiempoTotal(todas);
+        JOptionPane.showMessageDialog(null, "La carga de trabajo total es: " + totalHoras + " horas.");
+    }
+    
+    private static void busquedaRapidaTarea() {
+        try {
+            int id = solicitarNumero("Ingrese el ID de la tarea a buscar:");
+            if(id == -1) return;
+            List<Tarea> ordenadas = algoritmos.bubbleSort(registrosGlobales.obtenerTodasLasTareas(), Comparator.comparingInt(Tarea::getId));
+            Tarea encontrada = algoritmos.busquedaBinaria(ordenadas, id);
+            if (encontrada != null) {
+                JOptionPane.showMessageDialog(null, "Tarea encontrada:\n" + encontrada);
+            } else {
+                mostrarError("No se encontró ninguna tarea con ese ID.");
+            }
+        } catch (NumberFormatException e) {
+            mostrarError("El ID debe ser un número entero.");
+        }
+    }
+
     // Datos base
 
     private static void datosBase() {
@@ -316,10 +482,15 @@ public class Main {
         registrosGlobales.agregarEmpleado(e4);
         registrosGlobales.agregarEmpleado(e5);
 
-        Tarea t1 = new Tarea("Diseñar BD", 1, LocalDate.of(2025, 10, 1), 8);
-        Tarea t2 = new Tarea("Desarrollar API", 1, LocalDate.of(2025, 10, 10), 40);
-        Tarea t3 = new Tarea("Crear UI", 2, LocalDate.of(2025, 10, 20), 32);
-        Tarea t4 = new Tarea("Realizar Pruebas", 2, LocalDate.of(2025, 10, 25), 16);
+        Tarea t1 = new Tarea("Diseñar clases", 1, LocalDate.of(2025, 10, 1), 5);
+        Tarea t2 = new Tarea("Implementar lógica de clases", 1, LocalDate.of(2025, 10, 10), 10);
+        Tarea t3 = new Tarea("Crear el main", 2, LocalDate.of(2025, 10, 20), 20);
+        Tarea t4 = new Tarea("Verificar que todo funcione bien", 3, LocalDate.of(2025, 10, 25), 2);
+        colaDeTareasPriorizadas.push(t1);
+        colaDeTareasPriorizadas.push(t2);
+        colaDeTareasPriorizadas.push(t3);
+        colaDeTareasPriorizadas.push(t4);
+        
         registrosGlobales.agregarTarea(t1);
         registrosGlobales.agregarTarea(t2);
         registrosGlobales.agregarTarea(t3);
