@@ -60,4 +60,14 @@ public class Grafos {
 
         return resultado;
     }
+
+    public void eliminarTarea(Tarea tarea) {
+        // Eliminar la tarea como vértice principal (de las llaves del mapa)
+        mapaAdyacencia.remove(tarea);
+
+        // Eliminar la tarea de todas las listas de dependencias de otras tareas
+        for (List<Tarea> dependientes : mapaAdyacencia.values()) {
+            dependientes.remove(tarea);
+        }
+    }
 }

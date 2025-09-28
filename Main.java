@@ -2,12 +2,16 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 import java.awt.Dimension;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import ArbolBinario.ArbolBinario;
 import ArbolBinario.Empleado;
 import ColaPrioridad.ColaConPrioridad;
 import ColaPrioridad.Tarea;
+import Grafos.Grafos;
 import HashMap.Registros;
 import LinkedList.LinkedList;
 import LinkedList.Queue;
@@ -48,12 +52,22 @@ public class Main {
     }
 
     private static void menuDirectorGeneral() {
-        String[] opciones = {"Módulo de RH", "Volver"};
-        int seleccion = JOptionPane.showOptionDialog(null, "Panel de Dirección General", "Bienvenido, Director/a", 
-            JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, opciones, opciones[0]);
-        
-        if (seleccion == 0) {
-            menuRH();
+        String menu = "Panel de Dirección General\n\n" +
+                      "1. Módulo de RH\n" +
+                      "2. Crear Tarea Priorizada\n" +
+                      "3. Volver";
+        while (true) {
+            String opcionStr = JOptionPane.showInputDialog(null, menu, "Bienvenido, Director/a", JOptionPane.PLAIN_MESSAGE);
+            if(opcionStr == null) break;
+            try {
+                int opcion = Integer.parseInt(opcionStr);
+                switch(opcion){
+                    case 1: menuRH(); break;
+                    case 2: crearTareaPriorizada(); break;
+                    case 3: return;
+                    default: mostrarError("Opción no válida.");
+                }
+            } catch (NumberFormatException e) { mostrarError("Por favor, ingrese un número válido."); }
         }
     }
     
@@ -86,7 +100,28 @@ public class Main {
     }
 
     private static void menuLiderDeProyecto() {
-        JOptionPane.showMessageDialog(null, "");
+        String menu = "Panel de Líder de Proyecto\n\n" +
+                "1. Crear Tarea Priorizada\n" +
+                "2. Planificar Dependencias (Grafos)\n" +
+                "3. Consultar Empleados\n" +
+                "4. Volver";
+        while (true) {
+            String opcionStr = JOptionPane.showInputDialog(null, menu, "Gestión de Proyectos", JOptionPane.PLAIN_MESSAGE);
+            if (opcionStr == null) break;
+            try {
+                int opcion = Integer.parseInt(opcionStr);
+                switch (opcion) {
+                    case 1: crearTareaPriorizada(); break;
+                    case 2: planificarProyectoConDependencias(); break;
+                    case 3: 
+                        String listadoEmpleados = arbolEmpleados.mostrar();
+                        mostrador("Empleados Disponibles", listadoEmpleados);
+                        break;
+                    case 4: return;
+                    default: mostrarError("Opción no válida.");
+                }
+            } catch (NumberFormatException e) { mostrarError("Por favor, ingrese un número válido."); }
+        }
     }
     
     private static void menuAnalista() {
@@ -95,10 +130,6 @@ public class Main {
 
     private static void menuDesarrollador() {
         JOptionPane.showMessageDialog(null, "");
-    }
-
-    private static void mostrarError(String mensaje) {
-        JOptionPane.showMessageDialog(null, mensaje, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
     // Funciones RH
@@ -146,6 +177,124 @@ public class Main {
         } catch (NumberFormatException e) { mostrarError("El ID debe ser un número entero."); }
     }
 
+    // Funciones Lider de Proyectos
+
+    private static void crearTareaPriorizada() {
+        try {
+            String desc = solicitarTexto("Descripción de la tarea:");
+            if(desc == null) return;
+            int prio = solicitarNumero("Prioridad (1=Alta, 4=Baja):");
+            if(prio == -1) return;
+            LocalDate fecha = solicitarFecha("Fecha límite (AAAA-MM-DD):");
+            if(fecha == null) return;
+            int horas = solicitarNumero("Horas estimadas:");
+            if(horas == -1) return;
+
+            if (!desc.trim().isEmpty()) {
+                Tarea nueva = new Tarea(desc, prio, fecha, horas);
+                colaDeTareasPriorizadas.push(nueva);
+                registrosGlobales.agregarTarea(nueva);
+                JOptionPane.showMessageDialog(null, "Tarea priorizada creada con éxito:\n" + nueva);
+            }
+        } catch (NumberFormatException e) {
+            mostrarError("Error en el formato de número.");
+        } catch (DateTimeParseException e) {
+            mostrarError("Formato de fecha incorrecto. Use AAAA-MM-DD.");
+        }
+    }
+
+    private static void planificarProyectoConDependencias() {
+        Grafos proyecto = new Grafos();
+        List<Tarea> tareasDelProyecto = new ArrayList<>(registrosGlobales.obtenerTodasLasTareas());
+        
+        if (tareasDelProyecto.isEmpty()) {
+            mostrarError("No hay tareas creadas para iniciar la planificación.");
+            return;
+        }
+        
+        tareasDelProyecto.forEach(proyecto::agregarTarea);
+        
+        while (true) {
+            StringBuilder mensaje = new StringBuilder();
+            List<Tarea> rutaActual;
+            
+            try {
+                rutaActual = proyecto.obtenerRutaCritica();
+            } catch (Exception e) {
+                rutaActual = new ArrayList<>();
+            }
+            
+            
+            mensaje.append("TAREAS DISPONIBLES (AÚN SIN DEPENDENCIAS):\n");
+            List<Tarea> finalRutaActual = rutaActual;
+            tareasDelProyecto.stream()
+                .filter(t -> !finalRutaActual.contains(t))
+                .forEach(t -> mensaje.append("- ").append(t.getDescripcion()).append(" (ID: ").append(t.getId()).append(")\n"));
+
+            // Plan de ejecución actual
+            mensaje.append("\nPLAN DE EJECUCIÓN ACTUAL:\n");
+            if (rutaActual.isEmpty()) {
+                 mensaje.append(proyecto.obtenerRutaCritica().isEmpty() ? "¡PROYECTO COMPLETO!" : "Aún no hay un plan de ejecución claro.\n");
+            } else {
+                for (int i = 0; i < rutaActual.size(); i++) {
+                    mensaje.append(i + 1).append(". ").append(rutaActual.get(i).getDescripcion()).append(" --ID: ").append(rutaActual.get(i).getId()).append("\n");
+                }
+            }
+
+
+            String[] opciones = {"Añadir Dependencia", "Completar Tarea Actual", "Terminar Planificación"};
+            int seleccion = JOptionPane.showOptionDialog(null, new JTextArea(mensaje.toString()),
+                "Planificador Interactivo de Dependencias", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, opciones, opciones[0]);
+
+            if (seleccion == 2 || seleccion == -1) { // Terminar o cerrar ventana
+                break; 
+            }
+
+            try {
+                if (seleccion == 0) { // Añadir dependencia
+                    int idPrevia = solicitarNumero("ID de la tarea que va PRIMERO:");
+                    if(idPrevia == -1) continue;
+                    int idDependiente = solicitarNumero("ID de la tarea que DEPENDE de la anterior:");
+                    if(idDependiente == -1) continue;
+
+                    Tarea previa = registrosGlobales.buscarTarea(idPrevia);
+                    Tarea dependiente = registrosGlobales.buscarTarea(idDependiente);
+                    
+                    if (previa != null && dependiente != null) {
+                        proyecto.agregarDependencia(previa, dependiente);
+                        JOptionPane.showMessageDialog(null, "Dependencia agregada. El plan se ha actualizado.");
+                    } else {
+                        mostrarError("Uno o ambos IDs de tarea no son válidos.");
+                    }
+
+                } else if (seleccion == 1) { // Completar tarea
+                    List<Tarea> rutaParaCompletar = proyecto.obtenerRutaCritica();
+                    if(rutaParaCompletar.isEmpty()){
+                        mostrarError("¡Felicidades! Todas las tareas del proyecto ya han sido completadas.");
+                        continue;
+                    }
+                    
+                    int idCompletar = solicitarNumero("Ingrese el ID de la tarea que desea completar:");
+                    if(idCompletar == -1) continue;
+
+
+                    if (idCompletar == rutaParaCompletar.get(0).getId()) {
+                        Tarea completada = registrosGlobales.buscarTarea(idCompletar);
+                        proyecto.eliminarTarea(completada);
+                        tareasDelProyecto.remove(completada);
+                        JOptionPane.showMessageDialog(null, "¡Tarea \"" + completada.getDescripcion() + "\" completada con éxito!");
+                    } else {
+                        mostrarError("No se puede completar esta tarea.\nDebe completar primero: \"" + rutaParaCompletar.get(0).getDescripcion() + "\" (ID: " + rutaParaCompletar.get(0).getId() + ")");
+                    }
+                }
+            } catch (NumberFormatException e) {
+                mostrarError("El ID debe ser un número entero.");
+            } catch (Exception e) {
+                mostrarError("Error en la operación: " + e.getMessage());
+            }
+        }
+    }
+
     // Datos base
 
     private static void datosBase() {
@@ -167,10 +316,22 @@ public class Main {
         registrosGlobales.agregarEmpleado(e4);
         registrosGlobales.agregarEmpleado(e5);
 
+        Tarea t1 = new Tarea("Diseñar BD", 1, LocalDate.of(2025, 10, 1), 8);
+        Tarea t2 = new Tarea("Desarrollar API", 1, LocalDate.of(2025, 10, 10), 40);
+        Tarea t3 = new Tarea("Crear UI", 2, LocalDate.of(2025, 10, 20), 32);
+        Tarea t4 = new Tarea("Realizar Pruebas", 2, LocalDate.of(2025, 10, 25), 16);
+        registrosGlobales.agregarTarea(t1);
+        registrosGlobales.agregarTarea(t2);
+        registrosGlobales.agregarTarea(t3);
+        registrosGlobales.agregarTarea(t4);
 
         pilaIncidentesCriticos.push("Servidor de correos no responde");
         colaTareasSimples.enqueue("Revisión semanal de respaldos");
         listaTareasDepartamento.insertFirst("Desarrollo: Arreglar bug en main de Java");
+    }
+
+    private static void mostrarError(String mensaje) {
+        JOptionPane.showMessageDialog(null, mensaje, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
     private static void mostrador(String titulo, String mensaje) {
@@ -189,5 +350,11 @@ public class Main {
         String input = JOptionPane.showInputDialog(null, mensaje);
         if (input == null) return -1; // Manejo de cancelación
         return Integer.parseInt(input);
+    }
+
+    private static LocalDate solicitarFecha(String mensaje) throws DateTimeParseException {
+        String input = JOptionPane.showInputDialog(null, mensaje);
+        if (input == null) return null; // Manejo de cancelación
+        return LocalDate.parse(input);
     }
 }
