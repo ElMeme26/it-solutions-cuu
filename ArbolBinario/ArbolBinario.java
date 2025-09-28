@@ -157,7 +157,7 @@ public class ArbolBinario {
             return "No hay empleados en el sistema.";
         }
 
-        StringBuilder sb = new StringBuilder("=== Listado de Empleados ===");
+        StringBuilder sb = new StringBuilder("=== Listado de Empleados ===\n");
         Stack<NodoArbol> stack = new Stack<>();
         NodoArbol aux = raiz;
 
